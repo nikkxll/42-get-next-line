@@ -6,7 +6,7 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/09 21:31:39 by dnikifor          #+#    #+#             */
-/*   Updated: 2023/11/09 21:32:23 by dnikifor         ###   ########.fr       */
+/*   Updated: 2023/11/10 14:59:39 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,31 +43,41 @@ char	*ft_strchr(const char *s, int c)
 char	*ft_strjoin(char *s1, char *s2)
 {
 	char	*res;
-	char	*ret;
+	size_t	i;
+	size_t	j;
 
+	i = 0;
+	j = 0;
 	if (!s1)
 	{
-		s1 = (char *)malloc(sizeof(char));
+		s1 = (char *)malloc(1 * sizeof(char));
+		if (!s1)
+			return (NULL);
 		s1[0] = '\0';
 	}
-	if (!s1 || !s2)
+	if (!s2)
+	{
+		free(s1);
 		return (NULL);
+	}
 	res = (char *)malloc((ft_strlen(s1) + ft_strlen(s2) + 1) * sizeof(char));
 	if (!res)
+	{
+		free(s1);
 		return (NULL);
-	ret = res;
-	while (*s1)
-	{
-		*res = *s1;
-		res++;
-		s1++;
 	}
-	while (*s2)
+	while (s1[i])
 	{
-		*res = *s2;
-		res++;
-		s2++;
+		res[i] = s1[i];
+		i++;
 	}
-	*res = '\0';
-	return (ret);
+	while (s2[j])
+	{
+		res[i] = s2[j];
+		i++;
+		j++;
+	}
+	res[i] = '\0';
+	free(s1);
+	return (res);
 }
