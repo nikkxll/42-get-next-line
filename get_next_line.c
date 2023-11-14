@@ -6,48 +6,60 @@
 /*   By: dnikifor <dnikifor@student.hive.fi>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/11/08 16:57:03 by dnikifor          #+#    #+#             */
-/*   Updated: 2023/11/10 16:23:11 by dnikifor         ###   ########.fr       */
+/*   Updated: 2023/11/14 15:03:54 by dnikifor         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 #include <stdio.h>
 
-char	*ft_strcpy_newl(char *src)
+char	*ft_strcpy_newl_copy(char *src, char *dest)
 {
-	int		i;
-	char	*ptr;
-	char	*dest;
+	size_t		i;
+	char		*ptr;
 
-	i = 0;
-	if (!src[i])
-		return (NULL);
-	while (src[i] != '\n' && src[i] != '\0')
-		i++;
-	dest = malloc((i + 2) * sizeof(char));
-	if (!dest)
-		return (NULL);
 	ptr = dest;
 	i = 0;
-	while (src[i] != '\n' && src[i] != '\0')
+	while (src[i] != '\n' && src[i])
 	{
 		dest[i] = src[i];
 		i++;
 	}
 	if (src[i] == '\n')
 	{
-		dest[i] = '\n';
+		dest[i] = src[i];
 		i++;
 	}
 	dest[i] = '\0';
 	return (ptr);
 }
 
-char	*ft_strcpy_nullt(char *src)
+char	*ft_strcpy_curr_line(char *src)
+{
+	size_t		i;
+	char		*ptr;
+	char		*dest;
+
+	i = 0;
+	if (!src || src[0] == '\0')
+		return (NULL);
+	while (src[i] != '\n' && src[i] != '\0')
+		i++;
+	dest = NULL;
+	if (src[i] == '\n')
+		dest = malloc((i + 2) * sizeof(char));
+	else
+		dest = malloc((i + 1) * sizeof(char));
+	if (!dest)
+		return (NULL);
+	ptr = ft_strcpy_newl_copy(src, dest);
+	return (ptr);
+}
+
+char	*ft_strcpy_remainder(char *src)
 {
 	int		i;
 	int		j;
-	char	*ptr;
 	char	*dest;
 
 	i = 0;
@@ -55,20 +67,21 @@ char	*ft_strcpy_nullt(char *src)
 	while (src[i] != '\n' && src[i] != '\0')
 		i++;
 	if (!src[i])
-	{
-		free(src);
-		return (NULL);
-	}
+		return (ft_free(src));
 	dest = malloc((ft_strlen(src) - i + 1) * sizeof(char));
 	if (!dest)
-		return (NULL);
+		return (ft_free(src));
 	i++;
-	ptr = dest;
 	while (src[i] != '\0')
 		dest[j++] = src[i++];
 	dest[j] = '\0';
+	if (!dest[0])
+	{
+		free(dest);
+		return (ft_free(src));
+	}
 	free(src);
-	return (ptr);
+	return (dest);
 }
 
 char	*str_extractor(char *text_runner, int fd)
@@ -79,22 +92,19 @@ char	*str_extractor(char *text_runner, int fd)
 	bytes = 1;
 	buffer = (char *)malloc((BUFFER_SIZE + 1) * sizeof(char));
 	if (!buffer)
-		return (NULL);
+		return (ft_free(text_runner));
 	while (!ft_strchr(text_runner, '\n') && bytes > 0)
 	{
 		bytes = read(fd, buffer, BUFFER_SIZE);
 		if (bytes == -1)
 		{
 			free(buffer);
-			return (NULL);
+			return (ft_free(text_runner));
 		}
 		buffer[bytes] = '\0';
 		text_runner = ft_strjoin(text_runner, buffer);
 		if (!text_runner)
-		{
-			free(buffer);
-			return (NULL);
-		}
+			return (ft_free(buffer));
 	}
 	free(buffer);
 	return (text_runner);
@@ -110,29 +120,30 @@ char	*get_next_line(int fd)
 	text_runner = str_extractor(text_runner, fd);
 	if (!text_runner)
 	{
+		text_runner = NULL;
 		return (NULL);
 	}
-	current_line = ft_strcpy_newl(text_runner);
-	text_runner = ft_strcpy_nullt(text_runner);
-	if (!text_runner)
+	current_line = ft_strcpy_curr_line(text_runner);
+	if (!current_line)
 	{
+		text_runner = ft_free(text_runner);
 		return (NULL);
 	}
+	text_runner = ft_strcpy_remainder(text_runner);
 	return (current_line);
 }
 
-
-int	main()
-{
-	int file_descriptor;
-	char *str;
-	file_descriptor = open("test.txt", O_RDONLY);
-	str = get_next_line(file_descriptor);
-	printf("%s", str);
-	str = get_next_line(file_descriptor);
-	printf("%s", str);
-	str = get_next_line(file_descriptor);
-	printf("%s", str);
-	str = get_next_line(file_descriptor);
-	printf("%s", str);
-}
+// int	main()
+// {
+// 	int file_descriptor; 
+// 	char *str;
+// 	file_descriptor = open("multiple_nl.txt", O_RDONLY);
+// 	str = get_next_line(file_descriptor);
+// 	printf("%s\n", str);
+// 	str = get_next_line(file_descriptor);
+// 	printf("%s\n", str);
+// 	str = get_next_line(file_descriptor);
+// 	printf("%s\n", str);
+// 	str = get_next_line(file_descriptor);
+// 	printf("%s\n", str);
+// }
